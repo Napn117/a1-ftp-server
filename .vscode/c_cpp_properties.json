@@ -1,0 +1,35 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/local/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/gcc/include",
+                "C:/gcc/lib/gcc/x86_64-w64-mingw32/14.2.0/include",
+                "C:/gcc/x86_64-w64-mingw32/include"
+            ],
+            "defines": [
+                "_WIN32",
+                "WIN32_LEAN_AND_MEAN"
+            ],
+            "compilerPath": "C:/gcc/bin/g++.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

@@ -1,0 +1,51 @@
+GCC and Network Utilities Installation for MacOS 
+
+0. open a terminal
+
+1. to install packages on mac more easily, use homebrew package manager.
+
+install homebrew:  https://grew.sh/
+
+2. copy the installation instructions from the webiste of homebrew:
+
+e.g.  paste this in the terminal, then run.
+
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+
+
+3. install gcc by using the following command in the terminal.
+
+    brew install gcc. (installs latest version, g++-14, gcc-14)
+
+
+4. check the files installed.
+   
+   cd /user/local/bin/
+
+   ls. (see the gcc, g++ programs installed)
+
+
+5. to test if gcc installation succeeded:
+	
+	At the terminal, type: 
+
+	   gcc-14 (see results)
+
+	   g++-14
+
+	   g++
+
+
+
+
+6.  g++ is linked to clang by default, but we want it to be associated with g++-14; therefore, we need to manually link them together.
+
+	ln -s g++-14 g++
+
+7. log out, then sign-in to see the results of linking.
+
+
+8.  Later versions of MacOS do not have built-in ftp, etc. and so they need to be installed manually using homebrew.  
+
+    brew install inetutils

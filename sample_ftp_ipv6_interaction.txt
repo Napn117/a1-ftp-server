@@ -1,0 +1,35 @@
+C:\ftp_client>ftp
+ftp> debug
+Debugging On .
+ftp> open fe80::5c9c:bb0c:3196:bc74%18 1155
+Connected to fe80::5c9c:bb0c:3196:bc74%18.
+220 FTP Server ready
+---> OPTS UTF8 ON
+550 unrecognised command
+User (fe80::5c9c:bb0c:3196:bc74%18:(none)): napoleon
+---> USER napoleon
+331 Password required
+Password:
+---> PASS 342
+230 User logged in okay
+ftp> dir
+---> EPRT |2|fe80::fd39:f4ed:1938:97e6|55436|
+200 EPRT Command okay
+---> LIST
+150 Data connection opened for file transfer
+-rw-rw-   1 napoleon napoleon   104834 Apr 19 2021  blue.jpg
+-rw-rw-   1 napoleon napoleon    73599 Feb 14 2020  Massey.jpg
+drwxrwx   2 napoleon napoleon        0 Apr 06 11:16 secret
+drwxrwx   2 napoleon napoleon        0 Mar 31 2019  server_files
+226 Transfer successful, closing data connection
+ftp: 255 bytes received in 0.04Seconds 5.67Kbytes/sec.
+ftp> get blue.jpg
+---> EPRT |2|fe80::fd39:f4ed:1938:97e6|55453|
+200 EPRT Command okay
+---> RETR blue.jpg
+150 Data connection opened for file transfer
+226 Transfer successful, closing data connection
+ftp: 104834 bytes received in 0.01Seconds 10483.40Kbytes/sec.
+ftp> bye
+---> QUIT
+221 Service closing control connection
