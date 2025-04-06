@@ -39,14 +39,16 @@
   #include <stdio.h>
   #include <iostream>
 //   #include <WinSock2.h>
-  
+  /* NOTE: replaces all occurances of WSVERS in the code with this 16 bit WORD created by MAKEWORD function*/
   #define WSVERS MAKEWORD(2,2) /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
                     //The high-order byte specifies the minor version number; 
                     //the low-order byte specifies the major version number.
+/*NOTE: Windows Socket API object */				
   WSADATA wsadata; //Create a WSADATA object called wsadata. 
 #endif
 
 #define BUFFER_SIZE 256
+/*NOTE: Files are sent over FTP via a mode to seperate sending image data (binary) and plain text data*/
 enum class FileType{BINARY, TEXT, UNKNOWN};
 
 FileType file_type;  
@@ -65,7 +67,9 @@ file_type = FileType::UNKNOWN;
    //nothing to do here
 
 #elif defined _WIN32
-
+		/*NOTE: WSAStartup intialises a bunch of things for sockets. It takes in the 16 bit word which identifies the version 
+		of the WSA, in our case its 2.2 (the latest version) and the address of the socket api object we made earlier.
+		Internally there are some structs being created and filled with data to store a sockets data*/
 	   int err = WSAStartup(WSVERS, &wsadata);
 
 		 if (err != 0) {
@@ -76,12 +80,27 @@ file_type = FileType::UNKNOWN;
 		 }
 #endif		 
 
+		 /*struct sockaddr_in localaddr,remoteaddr;  //ipv4 only, needs replacing
+		 struct sockaddr_in local_data_addr_act;   //ipv4 only, needs replacing*/
+		 /*NOTE: Because the assignment states that the ftp client will use ipv6 then we have to use a different struct. 
+		 He wants us to use this method found in week 3 part 2 -pg14*/
+		 struct addrinfo localaddr, remoteaddr;
+		 struct addrinfo local_data_addr_act;
+		 struct addrinfo *results = NULL, hints;
+		 /*NOTE: hints might have junk data, setting the fields to 0 before manually filling them*/
+		 memset(&hints, 0, sizeof(struct addrinfo));
+		 hints.ai_family=AF_INET6;
+		 hints.ai_socktype=SOCK_STREAM;
+		 hints.ai_protocol=IPPROTO_TCP;
+		 hints.ai_flags=AI_PASSIVE;
 
-		 struct sockaddr_in localaddr,remoteaddr;  //ipv4 only, needs replacing
-		 struct sockaddr_in local_data_addr_act;   //ipv4 only, needs replacing
 
 #if defined __unix__ || defined __APPLE__
-
+/*NOTE: The are the sockets and are tracked by a simple integer by the OS. See the assigning by the socket() function below..
+		 s = the socket on the server that listens for commands
+		 ns = the socket created for responding to control connection commands(assigned when we accept the client for connection)
+		 s_data_act = the socket created for the active data connection (active meaning a client command tells the server where to connect to)
+		 ns_data = a socket used for passive data connection (this would be a socket created on a port that the client decides for the server)*/
 		 int s,ns;                //socket declaration
 		 int ns_data, s_data_act; //socket declaration
 #elif defined _WIN32			 
@@ -92,7 +111,7 @@ file_type = FileType::UNKNOWN;
 		 char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE];
 		
          // ns_data=INVALID_SOCKET;
-
+/*NOTE: Setting the passive socket to invalid since we arent using it.*/
 #if defined __unix__ || defined __APPLE__
 		  ns_data = -1;
 #elif defined _WIN32
@@ -109,14 +128,19 @@ file_type = FileType::UNKNOWN;
 		 printf("\n           date:     ");
 		 printf("\n============================================\n");
 	
-		 
+		 /*NOTE: Commenting these out because they are not used. We use the results addrinfo directly
 		 memset(&localaddr,0,sizeof(localaddr));//clean up the structure
-		 memset(&remoteaddr,0,sizeof(remoteaddr));//clean up the structure
+		 memset(&remoteaddr,0,sizeof(remoteaddr));//clean up the structure */
 		 
 //********************************************************************
 //SOCKET
 //********************************************************************
-		 s = socket(AF_INET, SOCK_STREAM, 0); //old programming style, needs replacing
+		 
+		/*NOTE: Create the command listening socket. The function is an OS level function which we cant see the details of.
+		It returns a number like '3' which is used to identify the socket in other functions its used in, but behind 
+		the scenes a socket is created*/
+		//s = socket(AF_INET, SOCK_STREAM, 0); //old programming style, needs replacing
+		s = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
 
 #if defined __unix__ || defined __APPLE__
 		 if (s <0) {
@@ -128,23 +152,33 @@ file_type = FileType::UNKNOWN;
 	 	 }
 #endif
 
-
-		 localaddr.sin_family = AF_INET;
+		 /*NOTE: Not needed*/
+		 //localaddr.sin_family = AF_INET;
 		 
 		 //CONTROL CONNECTION:  port number = content of argv[1]
 		 if (argc == 2) {
-			 localaddr.sin_port = htons((u_short)atoi(argv[1])); //ipv4 only, needs replacing. In our lectures, we have an 
-			 																										 //elegant way of resolving the local address and port to 
-			 																										 //be used by the server.				
+			/*NOTE: argc is the number of arguments in the argv array, the first is the server filepath and if there are 2 that means
+					that there is a port indicated too in argv[1]. 
+			- htons function = host to network short (16bit address - ipv4)
+			- atoi = ascii to integer
+			*/
+			 localaddr.sin_port = htons((u_short)atoi(argv[1]));//ipv4 only, needs replacing. In our lectures, we have an 
+			 													//elegant way of resolving the local address and port to 
+			 													//be used by the server.				
 		 }
+		 /*NOTE: otherwise here is the default port to use*/
 		 else {
 			 localaddr.sin_port = htons(1234);//default listening port //ipv4 only, needs replacing
 		 }
+		 /*NOTE: I think this can be found in the lecture notes somewhere*/
 		 localaddr.sin_addr.s_addr = INADDR_ANY;//server address should be local, old programming style, needs replacing
 		 
 //********************************************************************
 //BIND
 //********************************************************************
+
+/*NOTE: So once we have the structure set up with the correct info we can use it to bind the socket (s) to the address and port. 
+	this should also be found in the lecture notes*/
 		 if (bind(s,(struct sockaddr *)(&localaddr),sizeof(localaddr)) != 0) { //old programming style, needs replacing
 			 printf("Bind failed!\n");
 			 exit(0);
@@ -153,7 +187,8 @@ file_type = FileType::UNKNOWN;
 //********************************************************************
 //LISTEN
 //********************************************************************
-		 listen(s,5);
+	/*NOTE: listen on our socket for up to 5 connections*/	
+	listen(s,5);
 		
 //********************************************************************
 //INFINITE LOOP
@@ -171,6 +206,9 @@ file_type = FileType::UNKNOWN;
 			 printf("\n------------------------------------------------------------------------\n");
 
 #if defined __unix__ || defined __APPLE__ 
+/*NOTE: This accept function creates the socket used to talk back to the client. s is the listening socket,
+the next two parameters are struct/variable to be filled with data from the client connection - the OS is handling those details,
+here we just give it a place to store them.*/
 			 ns = accept(s,(struct sockaddr *)(&remoteaddr), (socklen_t*)&addrlen); 
 #elif defined _WIN32 
 			 ns = accept(s,(struct sockaddr *)(&remoteaddr), &addrlen); 
@@ -184,7 +222,9 @@ file_type = FileType::UNKNOWN;
 				 
 			 printf("\n============================================================================\n");
 	 		 printf("connected to [CLIENT's IP %s , port %d] through SERVER's port %d",
-			         inet_ntoa(remoteaddr.sin_addr),ntohs(remoteaddr.sin_port),ntohs(localaddr.sin_port)); //ipv4 only, needs replacing
+			    /*NOTE: The inet_ntoa function converts an (Ipv4) Internet network address into an 
+						ASCII string in Internet standard dotted-decimal format. */     
+				inet_ntoa(remoteaddr.sin_addr),ntohs(remoteaddr.sin_port),ntohs(localaddr.sin_port)); //ipv4 only, needs replacing
 			 printf("\n============================================================================\n");
 			 //printf("detected CLIENT's port number: %d\n", ntohs(remoteaddr.sin_port));
 
@@ -195,10 +235,14 @@ file_type = FileType::UNKNOWN;
 //********************************************************************
 //Respond with welcome message
 //*******************************************************************
+			/*NOTE: snprintf stores the string given into the buffer to be sent over the connection.
+				it returns the number of characters written to the buffer. a negative number indicates a
+				encoding error*/
 			 count=snprintf(send_buffer,BUFFER_SIZE,"220 FTP Server ready. \r\n");
+			 /*NOTE: if the count greater or equal to 0 and it fits in the buffer size send the data over the socket
+			 to the client.*/
 			 if(count >=0 && count < BUFFER_SIZE){
 			 	 bytes = send(ns, send_buffer, strlen(send_buffer), 0);
-
 			 }
 
 			//********************************************************************
@@ -206,7 +250,8 @@ file_type = FileType::UNKNOWN;
 			//********************************************************************
 
 			 while (1) {
-				 
+				 /*NOTE: n is just a counter for iterating through the incoming buffer as you read
+				the buffer 1 byte at a time. It resets for each command received.*/
 				 n = 0;
 
 				 
@@ -214,6 +259,7 @@ file_type = FileType::UNKNOWN;
 //********************************************************************
 //RECEIVE MESSAGE AND THEN FILTER IT
 //********************************************************************
+					/*NOTE: recv returns the number of stored bytes (should be 1 each time unless there are no more bytes to recieve)*/
 				   bytes = recv(ns, &receive_buffer[n], 1, 0);//receive byte by byte...
 
 					 if ((bytes < 0) || (bytes == 0)) break;
@@ -233,11 +279,15 @@ file_type = FileType::UNKNOWN;
 
 //********************************************************************
 //PROCESS COMMANDS/REQUEST FROM USER
-//********************************************************************				 
+//********************************************************************
+				 /*NOTE: Compare the buffers to the expected commands. 4 is the length of the buffer to check.*/
 				 if (strncmp(receive_buffer,"USER",4)==0)  {
 					 printf("Logging in... \n");
+					 /*NOTE: If we accept USER then we expect the password next, send back a message to the client.
+					 Firstly fill the buffer..*/
 					 count=snprintf(send_buffer,BUFFER_SIZE,"331 Password required (anything will do really... :-) \r\n");
 					 if(count >=0 && count < BUFFER_SIZE){
+						/*NOTE: .. then send it to the client*/
 					    bytes = send(ns, send_buffer, strlen(send_buffer), 0);
 					 }
 					 printf("[DEBUG INFO] <-- %s\n", send_buffer);
@@ -325,6 +375,7 @@ file_type = FileType::UNKNOWN;
 					 if (bytes < 0) break;
 				 }
 				 //---
+				 /*NOTE: Here we need to use filetype to determine how to send the file over the connection*/
 				 if (strncmp(receive_buffer,"RETR",4)==0)  {
 					 printf("unrecognised command \n");
 					 count=snprintf(send_buffer,BUFFER_SIZE,"502 command not implemented\r\n");					 
@@ -345,6 +396,8 @@ file_type = FileType::UNKNOWN;
 					 if (bytes < 0) break;
 				 }
 				 //---
+				 /*NOTE: This is where we basically implement whats in the PORT command but with ipv4 and ipv6 compatiability.
+				  */
 				 if (strncmp(receive_buffer,"EPRT",4)==0)  {  //more work needs to be done here
 					 printf("unrecognised command \n");
 					 count=snprintf(send_buffer,BUFFER_SIZE,"502 command not implemented\r\n");					 
@@ -417,9 +470,10 @@ file_type = FileType::UNKNOWN;
 					 local_data_addr_act.sin_port=htons(port_dec); //ipv4 only, needs to be replaced
 
 
-           //Note: the following connect() function is not correctly placed.  It works, but technically, as defined by
+           //the following connect() function is not correctly placed.  It works, but technically, as defined by
            // the protocol, connect() should occur in another place.  Hint: carefully inspect the lecture on FTP, active operations 
            // to find the answer. 
+		   /*NOTE: this connect call needs to be a function we can use in the LIST or RETR commands to establish a connection.*/
 					 if (connect(s_data_act, (struct sockaddr *)&local_data_addr_act, (int) sizeof(struct sockaddr)) != 0){
 						 printf("trying connection in %s %d\n",inet_ntoa(local_data_addr_act.sin_addr),ntohs(local_data_addr_act.sin_port));
 						 count=snprintf(send_buffer,BUFFER_SIZE, "425 Something is wrong, can't start active connection... \r\n");
