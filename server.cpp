@@ -130,6 +130,8 @@ int main(int argc, char *argv[])
 	int n, bytes, addrlen;
 #define DEFAULT_PORT "1234"
 	char portNumber[NI_MAXSERV];
+	char clientHost[NI_MAXHOST];
+	char clientService[NI_MAXSERV];
 	char username[80];
 	char passwd[80];
 	printf("\n============================================\n");
@@ -226,7 +228,7 @@ int main(int argc, char *argv[])
 		// NEW SOCKET newsocket = accept  //CONTROL CONNECTION
 		//********************************************************************
 		printf("\n------------------------------------------------------------------------\n");
-		printf("SERVER is waiting for an incoming connection request at port:%d", ntohs(localaddr.sin_port));
+		printf("SERVER is waiting for an incoming connection request at port:%d", portNumber == 0 ? DEFAULT_PORT : portNumber);
 		printf("\n------------------------------------------------------------------------\n");
 
 #if defined __unix__ || defined __APPLE__
@@ -245,12 +247,11 @@ int main(int argc, char *argv[])
 		if (ns == INVALID_SOCKET)
 			break;
 #endif
+		getnameinfo((struct sockaddr *)&remoteaddr, addrlen, clientHost, sizeof(clientHost), clientService, sizeof(clientService), NI_NUMERICHOST);
 
 		printf("\n============================================================================\n");
 		printf("connected to [CLIENT's IP %s , port %d] through SERVER's port %d",
-					 /*NOTE: The inet_ntoa function converts an (Ipv4) Internet network address into an
-						 ASCII string in Internet standard dotted-decimal format. */
-					 inet_ntoa(remoteaddr.sin_addr), ntohs(remoteaddr.sin_port), ntohs(localaddr.sin_port)); // ipv4 only, needs replacing
+					 clientHost, clientService, portNumber == 0 ? DEFAULT_PORT : portNumber);
 		printf("\n============================================================================\n");
 		// printf("detected CLIENT's port number: %d\n", ntohs(remoteaddr.sin_port));
 
@@ -501,21 +502,21 @@ int main(int argc, char *argv[])
 			//---
 			if (strncmp(receive_buffer, "PORT", 4) == 0)
 			{
-				s_data_act = socket(AF_INET, SOCK_STREAM, 0);
+				s_data_act = socket(AF_INET6, SOCK_STREAM, 0);
 				// local variables
 				// unsigned char act_port[2];
-				int act_port[2];
-				int act_ip[4], port_dec;
-				char ip_decimal[NI_MAXHOST];
+				int act_af[1], act_port[1];
+				int act_ip[6], port_dec;
+				char ip_hexadecimal[NI_MAXHOST];
 				printf("===================================================\n");
 				printf("\tActive FTP mode, the client is listening... \n");
 				active = 1; // flag for active connection
 
 				int scannedItems = sscanf(receive_buffer, "PORT %d,%d,%d,%d,%d,%d",
-																	&act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3],
-																	&act_port[0], &act_port[1]);
+																	&act_af[0], &act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3], &act_ip[4], &act_ip[5],
+																	&act_port[0]);
 
-				if (scannedItems < 6)
+				if (scannedItems < 8)
 				{
 					count = snprintf(send_buffer, BUFFER_SIZE, "501 Syntax error in arguments \r\n");
 					if (count >= 0 && count < BUFFER_SIZE)
@@ -527,18 +528,16 @@ int main(int argc, char *argv[])
 						break;
 				}
 
-				local_data_addr_act.sin_family = AF_INET; // local_data_addr_act  //ipv4 only, needs to be replaced.
-				count = snprintf(ip_decimal, NI_MAXHOST, "%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3]);
+				local_data_addr_act.ss_family = AF_INET6; // local_data_addr_act  //ipv4 only, needs to be replaced.
+				count = snprintf(ip_hexadecimal, NI_MAXHOST, "%d.%d.%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3], act_ip[4], act_ip[5]);
 
 				if (!(count >= 0 && count < BUFFER_SIZE))
 					break;
 
-				printf("\tCLIENT's IP is %s\n", ip_decimal);								 // IPv4 format
-				local_data_addr_act.sin_addr.s_addr = inet_addr(ip_decimal); // ipv4 only, needs to be replaced.
-				port_dec = act_port[0];
-				port_dec = port_dec << 8;
-				port_dec = port_dec + act_port[1];
-				printf("\tCLIENT's Port is %d\n", port_dec);
+				printf("\tCLIENT's IP is %s\n", ip_hexadecimal); // IPv4 format
+				local_data_addr_act = inet_addr(ip_hexadecimal); // ipv4 only, needs to be replaced.
+
+				printf("\tCLIENT's Port is %d\n", act_port[1]);
 				printf("===================================================\n");
 
 				local_data_addr_act.sin_port = htons(port_dec); // ipv4 only, needs to be replaced
