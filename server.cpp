@@ -502,21 +502,21 @@ int main(int argc, char *argv[])
 			//---
 			if (strncmp(receive_buffer, "PORT", 4) == 0)
 			{
-				s_data_act = socket(AF_INET6, SOCK_STREAM, 0);
+				s_data_act = socket(AF_INET, SOCK_STREAM, 0);
 				// local variables
 				// unsigned char act_port[2];
-				int act_af[1], act_port[1];
-				int act_ip[6], port_dec;
-				char ip_hexadecimal[NI_MAXHOST];
+				int act_port[2];
+				int act_ip[4], port_dec;
+				char ip_decimal[NI_MAXHOST];
 				printf("===================================================\n");
 				printf("\tActive FTP mode, the client is listening... \n");
 				active = 1; // flag for active connection
 
 				int scannedItems = sscanf(receive_buffer, "PORT %d,%d,%d,%d,%d,%d",
-																	&act_af[0], &act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3], &act_ip[4], &act_ip[5],
-																	&act_port[0]);
+																	&act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3],
+																	&act_port[0], &act_port[1]);
 
-				if (scannedItems < 8)
+				if (scannedItems < 6)
 				{
 					count = snprintf(send_buffer, BUFFER_SIZE, "501 Syntax error in arguments \r\n");
 					if (count >= 0 && count < BUFFER_SIZE)
@@ -528,24 +528,25 @@ int main(int argc, char *argv[])
 						break;
 				}
 
-				local_data_addr_act.ss_family = AF_INET6; // local_data_addr_act  //ipv4 only, needs to be replaced.
-				count = snprintf(ip_hexadecimal, NI_MAXHOST, "%d.%d.%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3], act_ip[4], act_ip[5]);
+				local_data_addr_act.sin_family = AF_INET; // local_data_addr_act  //ipv4 only, needs to be replaced.
+				count = snprintf(ip_decimal, NI_MAXHOST, "%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3]);
 
 				if (!(count >= 0 && count < BUFFER_SIZE))
 					break;
 
-				printf("\tCLIENT's IP is %s\n", ip_hexadecimal); // IPv4 format
-				local_data_addr_act = inet_addr(ip_hexadecimal); // ipv4 only, needs to be replaced.
-
-				printf("\tCLIENT's Port is %d\n", act_port[1]);
+				printf("\tCLIENT's IP is %s\n", ip_decimal);								 // IPv4 format
+				local_data_addr_act.sin_addr.s_addr = inet_addr(ip_decimal); // ipv4 only, needs to be replaced.
+				port_dec = act_port[0];
+				port_dec = port_dec << 8;
+				port_dec = port_dec + act_port[1];
+				printf("\tCLIENT's Port is %d\n", port_dec);
 				printf("===================================================\n");
 
 				local_data_addr_act.sin_port = htons(port_dec); // ipv4 only, needs to be replaced
 
-				// the following connect() function is not correctly placed.  It works, but technically, as defined by
+				// Note: the following connect() function is not correctly placed.  It works, but technically, as defined by
 				//  the protocol, connect() should occur in another place.  Hint: carefully inspect the lecture on FTP, active operations
 				//  to find the answer.
-				/*NOTE: this connect call needs to be a function we can use in the LIST or RETR commands to establish a connection.*/
 				if (connect(s_data_act, (struct sockaddr *)&local_data_addr_act, (int)sizeof(struct sockaddr)) != 0)
 				{
 					printf("trying connection in %s %d\n", inet_ntoa(local_data_addr_act.sin_addr), ntohs(local_data_addr_act.sin_port));
