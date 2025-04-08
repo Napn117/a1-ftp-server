@@ -462,95 +462,58 @@ while (1)
 		/*NOTE: This is where we basically implement whats in the PORT command but with ipv4 and ipv6 compatiability.
 		 */
 		if (strncmp(receive_buffer, "EPRT", 4) == 0)
-		{ // more work needs to be done here
-			printf("unrecognised command \n");
-			count = snprintf(send_buffer, BUFFER_SIZE, "502 command not implemented\r\n");
-			if (count >= 0 && count < BUFFER_SIZE)
-			{
-				bytes = send(ns, send_buffer, strlen(send_buffer), 0);
-			}
-			printf("[DEBUG INFO] <-- %s\n", send_buffer);
-			if (bytes < 0)
-				break;
-		}
-		//---
-		if (strncmp(receive_buffer, "CWD", 3) == 0)
 		{
-			printf("unrecognised command \n");
-			count = snprintf(send_buffer, BUFFER_SIZE, "502 command not implemented\r\n");
-			if (count >= 0 && count < BUFFER_SIZE)
+			int protocol_number;
+			char ip_address[50];
+			int port_number;
+			int counter = 0;
+			char *tokenPtr = strtok(receive_buffer, "|");
+			while (tokenPtr != NULL)
 			{
-				bytes = send(ns, send_buffer, strlen(send_buffer), 0);
-			}
-			printf("[DEBUG INFO] <-- %s\n", send_buffer);
-			if (bytes < 0)
-				break;
-		}
-		//---
-		if (strncmp(receive_buffer, "QUIT", 4) == 0)
-		{
-			printf("Quit \n");
-			count = snprintf(send_buffer, BUFFER_SIZE, "221 Connection close by client\r\n");
-			if (count >= 0 && count < BUFFER_SIZE)
-			{
-				bytes = send(ns, send_buffer, strlen(send_buffer), 0);
-			}
-			printf("[DEBUG INFO] <-- %s\n", send_buffer);
-			if (bytes < 0)
-				break;
-		}
-		//---
-		if (strncmp(receive_buffer, "PORT", 4) == 0)
-		{
-			s_data_act = socket(AF_INET, SOCK_STREAM, 0);
-			// local variables
-			// unsigned char act_port[2];
-			int act_port[2];
-			int act_ip[4], port_dec;
-			char ip_decimal[NI_MAXHOST];
-
-			printf("===================================================\n");
-			printf("\tActive FTP mode, the client is listening... \n");
-			active = 1; // flag for active connection
-
-			int scannedItems = sscanf(receive_buffer, "PORT %d,%d,%d,%d,%d,%d",
-																&act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3],
-																&act_port[0], &act_port[1]);
-
-			if (scannedItems < 6)
-			{
-				count = snprintf(send_buffer, BUFFER_SIZE, "501 Syntax error in arguments \r\n");
-				if (count >= 0 && count < BUFFER_SIZE)
+				switch (counter)
 				{
-					bytes = send(ns, send_buffer, strlen(send_buffer), 0);
-				}
-				printf("[DEBUG INFO] <-- %s\n", send_buffer);
-				if (bytes < 0)
+				case 0:
 					break;
+				case 1:
+					protocol_number = atoi(tokenPtr);
+					break;
+				case 2:
+					strcpy(ip_address, tokenPtr);
+					break;
+				case 3:
+					port_number = atoi(tokenPtr);
+					break;
+				default:
+					break;
+				}
+				counter++;
+				tokenPtr = strtok(NULL, "|");
 			}
-			struct sockaddr_in *ipv4_address = (sockaddr_in *)&local_data_addr_act;
-			ipv4_address->sin_family = AF_INET;
 
-			count = snprintf(ip_decimal, NI_MAXHOST, "%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3]);
+			if (protocol_number == 1)
+			{
+				struct sockaddr_in *addr4 = (sockaddr_in *)&local_data_addr_act;
+				addr4->sin_family = AF_INET;
+				addr4->sin_port = htons(port_number);
+				inet_pton(protocol_number, ip_address, &(addr4->sin_addr));
+			}
+			else
+			{
+				struct sockaddr_in6 *addr6 = (sockaddr_in6 *)&local_data_addr_act;
+				addr6->sin6_family = AF_INET6;
+				addr6->sin6_family = htons(port_number);
+				inet_pton(protocol_number, ip_address, &(addr6->sin6_addr));
+			}
 
-			if (!(count >= 0 && count < BUFFER_SIZE))
+			count = snprintf(send_buffer, BUFFER_SIZE, "200 EPRT Command successful\r\n");
+			if (count >= 0 && count < BUFFER_SIZE)
+			{
+				bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+			}
+			printf("[DEBUG INFO] <-- %s\n", send_buffer);
+			if (bytes < 0)
 				break;
-
-			printf("\tCLIENT's IP is %s\n", ip_decimal); // IPv4 format
-			// local_data_addr_act.sin_addr.s_addr=inet_addr(ip_decimal);
-			ipv4_address->sin_addr.s_addr = inet_addr(ip_decimal); // ipv4 only, needs to be replaced.
-
-			port_dec = act_port[0];
-			port_dec = port_dec << 8;
-			port_dec = port_dec + act_port[1];
-			printf("\tCLIENT's Port is %d\n", port_dec);
-			printf("===================================================\n");
-
-			// local_data_addr_act.sin_port = htons(port_dec); // ipv4 only, needs to be replaced
-			ipv4_address->sin_port = htons(port_dec);
-			// Note: the following connect() function is not correctly placed.  It works, but technically, as defined by
-			//  the protocol, connect() should occur in another place.  Hint: carefully inspect the lecture on FTP, active operations
-			//  to find the answer.
+			s_data_act = socket(AF_INET, SOCK_STREAM, 0);
 			char dataHost[NI_MAXHOST];
 			char dataService[NI_MAXSERV];
 			getnameinfo((struct sockaddr *)&local_data_addr_act, addrlen, dataHost, sizeof(dataHost), dataService, sizeof(dataService), NI_NUMERICHOST);
@@ -565,6 +528,85 @@ while (1)
 
 					printf("[DEBUG INFO] <-- %s\n", send_buffer);
 				}
+			}
+			//---
+			if (strncmp(receive_buffer, "CWD", 3) == 0)
+			{
+				printf("unrecognised command \n");
+				count = snprintf(send_buffer, BUFFER_SIZE, "502 command not implemented\r\n");
+				if (count >= 0 && count < BUFFER_SIZE)
+				{
+					bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+				}
+				printf("[DEBUG INFO] <-- %s\n", send_buffer);
+				if (bytes < 0)
+					break;
+			}
+			//---
+			if (strncmp(receive_buffer, "QUIT", 4) == 0)
+			{
+				printf("Quit \n");
+				count = snprintf(send_buffer, BUFFER_SIZE, "221 Connection close by client\r\n");
+				if (count >= 0 && count < BUFFER_SIZE)
+				{
+					bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+				}
+				printf("[DEBUG INFO] <-- %s\n", send_buffer);
+				if (bytes < 0)
+					break;
+			}
+			//---
+			if (strncmp(receive_buffer, "PORT", 4) == 0)
+			{
+				// s_data_act = socket(AF_INET, SOCK_STREAM, 0);
+				//  local variables
+				//  unsigned char act_port[2];
+				int act_port[2];
+				int act_ip[4], port_dec;
+				char ip_decimal[NI_MAXHOST];
+
+				printf("===================================================\n");
+				printf("\tActive FTP mode, the client is listening... \n");
+				active = 1; // flag for active connection
+
+				int scannedItems = sscanf(receive_buffer, "PORT %d,%d,%d,%d,%d,%d",
+																	&act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3],
+																	&act_port[0], &act_port[1]);
+
+				if (scannedItems < 6)
+				{
+					count = snprintf(send_buffer, BUFFER_SIZE, "501 Syntax error in arguments \r\n");
+					if (count >= 0 && count < BUFFER_SIZE)
+					{
+						bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+					}
+					printf("[DEBUG INFO] <-- %s\n", send_buffer);
+					if (bytes < 0)
+						break;
+				}
+				struct sockaddr_in *ipv4_address = (sockaddr_in *)&local_data_addr_act;
+				ipv4_address->sin_family = AF_INET;
+
+				count = snprintf(ip_decimal, NI_MAXHOST, "%d.%d.%d.%d", act_ip[0], act_ip[1], act_ip[2], act_ip[3]);
+
+				if (!(count >= 0 && count < BUFFER_SIZE))
+					break;
+
+				printf("\tCLIENT's IP is %s\n", ip_decimal); // IPv4 format
+				// local_data_addr_act.sin_addr.s_addr=inet_addr(ip_decimal);
+				ipv4_address->sin_addr.s_addr = inet_addr(ip_decimal); // ipv4 only, needs to be replaced.
+
+				port_dec = act_port[0];
+				port_dec = port_dec << 8;
+				port_dec = port_dec + act_port[1];
+				printf("\tCLIENT's Port is %d\n", port_dec);
+				printf("===================================================\n");
+
+				// local_data_addr_act.sin_port = htons(port_dec); // ipv4 only, needs to be replaced
+				ipv4_address->sin_port = htons(port_dec);
+				// Note: the following connect() function is not correctly placed.  It works, but technically, as defined by
+				//  the protocol, connect() should occur in another place.  Hint: carefully inspect the lecture on FTP, active operations
+				//  to find the answer.
 
 #if defined __unix__ || defined __APPLE__
 				close(s_data_act);
