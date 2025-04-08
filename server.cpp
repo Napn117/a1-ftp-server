@@ -16,8 +16,8 @@
 // Author: n.h.reyes@massey.ac.nz
 //=======================================================================================================================
 
-#define USE_IPV6 false // if set to false, IPv4 addressing scheme will be used; you need to set this to true to
-											 // enable IPv6 later on.  The assignment will be marked using IPv6!
+#define USE_IPV6 true // if set to false, IPv4 addressing scheme will be used; you need to set this to true to
+											// enable IPv6 later on.  The assignment will be marked using IPv6!
 
 #if defined __unix__ || defined __APPLE__
 #include <unistd.h>
@@ -228,7 +228,7 @@ while (1)
 	// NEW SOCKET newsocket = accept  //CONTROL CONNECTION
 	//********************************************************************
 	printf("\n------------------------------------------------------------------------\n");
-	printf("SERVER is waiting for an incoming connection request at port:%d", portNumber == 0 ? DEFAULT_PORT : portNumber);
+	printf("SERVER is waiting for an incoming connection request at port:%d", atoi(portNumber));
 	printf("\n------------------------------------------------------------------------\n");
 
 #if defined __unix__ || defined __APPLE__
@@ -251,7 +251,7 @@ while (1)
 
 	printf("\n============================================================================\n");
 	printf("connected to [CLIENT's IP %s , port %d] through SERVER's port %d",
-				 clientHost, clientService, portNumber == 0 ? DEFAULT_PORT : portNumber);
+				 clientHost, atoi(clientService), atoi(portNumber));
 	printf("\n============================================================================\n");
 	// printf("detected CLIENT's port number: %d\n", ntohs(remoteaddr.sin_port));
 
@@ -557,7 +557,7 @@ while (1)
 
 			if (connect(s_data_act, (struct sockaddr *)&local_data_addr_act, (int)sizeof(struct sockaddr)) != 0)
 			{
-				printf("trying connection in %s %d\n", clientHost, clientService);
+				printf("trying connection in %s %d\n", clientHost, atoi(clientService));
 				count = snprintf(send_buffer, BUFFER_SIZE, "425 Something is wrong, can't start active connection... \r\n");
 				if (count >= 0 && count < BUFFER_SIZE)
 				{

@@ -1,0 +1,23 @@
+ Volume in drive R is 2TB Hard Drive
+ Volume Serial Number is 4A33-12A6
+
+ Directory of R:\Massey\2025 - Semester 1\Operating Systems and Networks\Assignment 1
+
+08/04/2025  02:00 PM    <DIR>          .
+28/03/2025  09:06 AM    <DIR>          ..
+28/03/2025  09:28 AM    <DIR>          .vscode
+03/04/2025  05:38 PM            42,621 A1_2025_instructions.pdf
+28/03/2025  09:27 AM           100,376 black.jpg
+28/03/2025  09:27 AM               694 makefile
+28/03/2025  09:27 AM               163 makefile - macOS
+28/03/2025  09:27 AM               176 makefile - Windows
+28/03/2025  09:27 AM             1,111 notes_on_mac_napoleon.txt
+28/03/2025  09:27 AM             1,142 sample_ftp_ipv4_interaction.txt
+28/03/2025  09:27 AM             1,173 sample_ftp_ipv6_interaction.txt
+08/04/2025  02:00 PM            24,459 server.cpp
+08/04/2025  02:00 PM           206,821 server.exe
+08/04/2025  02:01 PM                 0 tmp.txt
+28/03/2025  09:27 AM            17,855 VSCode support files.docx
+28/03/2025  09:27 AM            71,993 white.jpg
+              13 File(s)        468,584 bytes
+               3 Dir(s)  1,637,853,880,320 bytes free
