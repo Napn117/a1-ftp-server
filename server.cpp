@@ -489,20 +489,20 @@ while (1)
 				counter++;
 				tokenPtr = strtok(NULL, "|");
 			}
-
+			printf("\nip: %s", ip_address);
 			if (protocol_number == 1)
 			{
 				struct sockaddr_in *addr4 = (sockaddr_in *)&local_data_addr_act;
 				addr4->sin_family = AF_INET;
 				addr4->sin_port = htons(port_number);
-				inet_pton(protocol_number, ip_address, &(addr4->sin_addr));
+				inet_pton(AF_INET, ip_address, &(addr4->sin_addr));
 			}
 			else
 			{
 				struct sockaddr_in6 *addr6 = (sockaddr_in6 *)&local_data_addr_act;
 				addr6->sin6_family = AF_INET6;
 				addr6->sin6_port = htons(port_number);
-				inet_pton(protocol_number, ip_address, &(addr6->sin6_addr));
+				inet_pton(AF_INET6, ip_address, &(addr6->sin6_addr));
 			}
 
 			count = snprintf(send_buffer, BUFFER_SIZE, "200 EPRT Command successful\r\n");
@@ -515,6 +515,7 @@ while (1)
 				break;
 
 			s_data_act = socket(AF_INET6, SOCK_STREAM, 0);
+			active = 1; // flag for active connection
 			char dataHost[NI_MAXHOST];
 			char dataService[NI_MAXSERV];
 			getnameinfo((struct sockaddr *)&local_data_addr_act, addrlen, dataHost, sizeof(dataHost), dataService, sizeof(dataService), NI_NUMERICHOST);
@@ -539,7 +540,7 @@ while (1)
 			}
 			else
 			{
-				count = snprintf(send_buffer, BUFFER_SIZE, "200 PORT Command successful\r\n");
+				count = snprintf(send_buffer, BUFFER_SIZE, "200 EPRT Command successful\r\n");
 				if (count >= 0 && count < BUFFER_SIZE)
 				{
 					bytes = send(ns, send_buffer, strlen(send_buffer), 0);
@@ -583,10 +584,10 @@ while (1)
 			int act_port[2];
 			int act_ip[4], port_dec;
 			char ip_decimal[NI_MAXHOST];
+			active = 1; // flag for active connection
 
 			printf("===================================================\n");
 			printf("\tActive FTP mode, the client is listening... \n");
-			active = 1; // flag for active connection
 
 			int scannedItems = sscanf(receive_buffer, "PORT %d,%d,%d,%d,%d,%d",
 																&act_ip[0], &act_ip[1], &act_ip[2], &act_ip[3],
