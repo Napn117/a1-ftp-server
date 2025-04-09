@@ -3,7 +3,7 @@
 
  Directory of R:\Massey\2025 - Semester 1\Operating Systems and Networks\Assignment 1
 
-09/04/2025  02:40 PM    <DIR>          .
+09/04/2025  03:09 PM    <DIR>          .
 09/04/2025  12:46 PM    <DIR>          ..
 28/03/2025  09:28 AM    <DIR>          .vscode
 03/04/2025  05:38 PM            42,621 A1_2025_instructions.pdf
@@ -14,10 +14,10 @@
 28/03/2025  09:27 AM             1,111 notes_on_mac_napoleon.txt
 28/03/2025  09:27 AM             1,142 sample_ftp_ipv4_interaction.txt
 28/03/2025  09:27 AM             1,173 sample_ftp_ipv6_interaction.txt
-09/04/2025  02:40 PM            30,388 server.cpp
-09/04/2025  02:40 PM           212,141 server.exe
-09/04/2025  02:43 PM                 0 tmp.txt
+09/04/2025  03:09 PM            27,854 server.cpp
+09/04/2025  03:09 PM           214,364 server.exe
+09/04/2025  03:10 PM                 0 tmp.txt
 28/03/2025  09:27 AM            17,855 VSCode support files.docx
 28/03/2025  09:27 AM            71,993 white.jpg
-              13 File(s)        479,833 bytes
-               3 Dir(s)  1,637,853,052,928 bytes free
+              13 File(s)        479,522 bytes
+               3 Dir(s)  1,637,852,966,912 bytes free

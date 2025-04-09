@@ -272,7 +272,7 @@ while (1)
 		//********************************************************************
 		if (strncmp(receive_buffer, "USER", 4) == 0)
 		{
-			char username[] = {'napoleon'};
+			char username[] = "napoleon";
 			char input_user[50];
 			int scannedItems = sscanf(receive_buffer, "USER %s", input_user);
 
@@ -314,7 +314,7 @@ while (1)
 		//---
 		if (strncmp(receive_buffer, "PASS", 4) == 0)
 		{
-			char password[] = {'342'};
+			char password[] = "342";
 			char input_password[50];
 			int scannedItems = sscanf(receive_buffer, "PASS %s", input_password);
 
