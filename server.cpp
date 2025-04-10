@@ -557,7 +557,6 @@ while (1)
 						{
 
 							count = snprintf(send_buffer, BUFFER_SIZE, "%s", text_buffer);
-							printf("%i\n", count);
 							if (count >= 0 && count < BUFFER_SIZE)
 							{
 
@@ -573,7 +572,6 @@ while (1)
 				{
 					while ((count = fread(send_buffer, sizeof(char), BUFFER_SIZE, fin)) > 0)
 					{
-						printf("%d\n", count);
 						if (active == 0)
 						{
 							send(ns_data, send_buffer, count, 0);
@@ -757,6 +755,15 @@ while (1)
 			printf("\tCLIENT's Port is %d\n", port_dec);
 			printf("===================================================\n");
 			ipv4_address->sin_port = htons(port_dec);
+
+			count = snprintf(send_buffer, BUFFER_SIZE, "200 PORT Command successful\r\n");
+            if (count >= 0 && count < BUFFER_SIZE)
+            {
+                bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+            }
+            printf("[DEBUG INFO] <-- %s\n", send_buffer);
+            if (bytes < 0)
+                break;
 		}
 		//---
 		// technically, LIST is different than NLST,but we make them the same here
